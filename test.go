@@ -1,16 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
-	"database/sql"
-	_"github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 )
 
 type Article struct {
-	Id uint16
+	Id                           uint16
 	Title, Description, Textarea string
 }
 
@@ -24,12 +24,12 @@ func home(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, err.Error())
 	}
 
-	db, err := sql.Open("mysql","root:@tcp(127.0.0.1:3306)/go")
-		if err != nil {
-			panic(err)
-		}
+	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/go")
+	if err != nil {
+		panic(err)
+	}
 
-		defer db.Close()
+	defer db.Close()
 
 	res, err := db.Query("SELECT * FROM `article`")
 	if err != nil {
@@ -47,7 +47,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 		posts = append(posts, post)
 	}
 
-	t.ExecuteTemplate(w,"home", posts)
+	t.ExecuteTemplate(w, "home", posts)
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func create(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, err.Error())
 	}
 
-	t.ExecuteTemplate(w,"create", nil)
+	t.ExecuteTemplate(w, "create", nil)
 }
 
 func save_article(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +66,9 @@ func save_article(w http.ResponseWriter, r *http.Request) {
 	textarea := r.FormValue("textarea")
 
 	if title == "" || description == "" || textarea == "" {
-		fmt.Fprintf(w,"nonono")
-	}else{
-		db, err := sql.Open("mysql","root:@tcp(127.0.0.1:3306)/go")
+		fmt.Fprintf(w, "nonono")
+	} else {
+		db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/go")
 		if err != nil {
 			panic(err)
 		}
@@ -82,7 +82,7 @@ func save_article(w http.ResponseWriter, r *http.Request) {
 
 		defer insert.Close()
 
-		http.Redirect(w,r,"/home", http.StatusSeeOther)
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
 	}
 }
 
@@ -91,10 +91,10 @@ func show_post(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.ParseFiles("template/show.html", "template/footer.html", "template/header.html")
 
-	db, err := sql.Open("mysql","root:@tcp(127.0.0.1:3306)/go")
-		if err != nil {
-			panic(err)
-		}
+	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/go")
+	if err != nil {
+		panic(err)
+	}
 
 	defer db.Close()
 
@@ -114,20 +114,20 @@ func show_post(w http.ResponseWriter, r *http.Request) {
 		showPost = post
 	}
 
-	t.ExecuteTemplate(w,"show", showPost)
+	t.ExecuteTemplate(w, "show", showPost)
 }
 
 func handleFunc() {
 	rtr := mux.NewRouter()
 
-	rtr.HandleFunc("/home",home).Methods("GET")
-	rtr.HandleFunc("/create",create).Methods("GET")
-	rtr.HandleFunc("/save_article",save_article).Methods("POST")
-	rtr.HandleFunc("/post/{id:[0-9]+}",show_post).Methods("GET")
+	rtr.HandleFunc("/home", home).Methods("GET")
+	rtr.HandleFunc("/create", create).Methods("GET")
+	rtr.HandleFunc("/save_article", save_article).Methods("POST")
+	rtr.HandleFunc("/post/{id:[0-9]+}", show_post).Methods("GET")
 
 	http.Handle("/", rtr)
-	http.Handle("/static/",http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-	http.ListenAndServe(":8080",nil)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	http.ListenAndServe(":8080", nil)
 }
 
 func main() {
