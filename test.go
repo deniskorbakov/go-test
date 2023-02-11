@@ -9,9 +9,18 @@ import (
 	"net/http"
 )
 
+// структура для записей
 type Article struct {
 	Id                           uint16
 	Title, Description, Textarea string
+}
+
+// структура для регистрации
+type ContactDetails struct {
+	Login         string
+	Password      string
+	Success       bool
+	StorageAccess string
 }
 
 var posts = []Article{}
@@ -117,13 +126,24 @@ func show_post(w http.ResponseWriter, r *http.Request) {
 	t.ExecuteTemplate(w, "show", showPost)
 }
 
+func register(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("template/register.html", "template/footer.html", "template/header.html")
+
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
+
+	t.ExecuteTemplate(w, "register", nil)
+}
+
 func handleFunc() {
 	rtr := mux.NewRouter()
 
-	rtr.HandleFunc("/home", home).Methods("GET")
+	rtr.HandleFunc("/", home).Methods("GET")
 	rtr.HandleFunc("/create", create).Methods("GET")
 	rtr.HandleFunc("/save_article", save_article).Methods("POST")
 	rtr.HandleFunc("/post/{id:[0-9]+}", show_post).Methods("GET")
+	rtr.HandleFunc("/register", register).Methods("GET")
 
 	http.Handle("/", rtr)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
