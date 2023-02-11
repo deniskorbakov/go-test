@@ -136,6 +136,16 @@ func register(w http.ResponseWriter, r *http.Request) {
 	t.ExecuteTemplate(w, "register", nil)
 }
 
+func authorization(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("template/authorization.html", "template/footer.html", "template/header.html")
+
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
+
+	t.ExecuteTemplate(w, "authorization", nil)
+}
+
 func handleFunc() {
 	rtr := mux.NewRouter()
 
@@ -144,6 +154,7 @@ func handleFunc() {
 	rtr.HandleFunc("/save_article", save_article).Methods("POST")
 	rtr.HandleFunc("/post/{id:[0-9]+}", show_post).Methods("GET")
 	rtr.HandleFunc("/register", register).Methods("GET")
+	rtr.HandleFunc("/authorization", authorization).Methods("GET")
 
 	http.Handle("/", rtr)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
