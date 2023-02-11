@@ -91,7 +91,7 @@ func save_article(w http.ResponseWriter, r *http.Request) {
 
 		defer insert.Close()
 
-		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
