@@ -17,10 +17,9 @@ type Article struct {
 
 // структура для регистрации
 type ContactDetails struct {
-	Login         string
-	Password      string
-	Success       bool
-	StorageAccess string
+	Login    string
+	Password string
+	Success  uint16
 }
 
 var posts = []Article{}
@@ -146,15 +145,50 @@ func authorization(w http.ResponseWriter, r *http.Request) {
 	t.ExecuteTemplate(w, "authorization", nil)
 }
 
+func registerBackEnd(w http.ResponseWriter, r *http.Request) {
+
+	data := ContactDetails{
+		Login:    r.FormValue("login"),
+		Password: r.FormValue("password"),
+	}
+
+	if data.Login == "" {
+		fmt.Fprintf(w, "Не заполнено поле логин")
+	} else if data.Password == "" {
+		fmt.Fprintf(w, "Не заполнено поле пароль")
+	} else {
+		db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/go")
+		if err != nil {
+			panic(err)
+		}
+
+		defer db.Close()
+
+		//проверка на регистрацию
+		data.Success = 1
+
+		insert, err := db.Query(fmt.Sprintf("INSERT INTO `users` (`login`,`password`,`success`) VALUES ('%s','%s','%b')", data.Login, data.Password, data.Success))
+		if err != nil {
+			panic(err)
+		}
+
+		defer insert.Close()
+
+		http.Redirect(w, r, "/authorization", http.StatusSeeOther)
+	}
+}
+
 func handleFunc() {
 	rtr := mux.NewRouter()
 
 	rtr.HandleFunc("/", home).Methods("GET")
 	rtr.HandleFunc("/create", create).Methods("GET")
-	rtr.HandleFunc("/save_article", save_article).Methods("POST")
 	rtr.HandleFunc("/post/{id:[0-9]+}", show_post).Methods("GET")
 	rtr.HandleFunc("/register", register).Methods("GET")
 	rtr.HandleFunc("/authorization", authorization).Methods("GET")
+
+	rtr.HandleFunc("/save_article", save_article).Methods("POST")
+	rtr.HandleFunc("/registerBackEnd", registerBackEnd).Methods("POST")
 
 	http.Handle("/", rtr)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
